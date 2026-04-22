@@ -1,4 +1,3 @@
-
 variable "talos_cluster_name" {
   type        = string
   default     = null
@@ -65,6 +64,28 @@ variable "talos_extensions" {
 
   By default, no extension will be included.
   EOT
+}
+
+variable "kubernetes_version" {
+  type        = string
+  default     = null
+  description = <<-EOT
+  Kubernetes version to install, for instance v1.35.2 (don't forget the 'v').
+
+  If none is specified, we will retrieve https://dl.k8s.io/release/stable.txt
+  to know what's the latest stable release.
+  EOT
+}
+
+data "http" "latest_stable_kubernetes_version" {
+  url = "https://dl.k8s.io/release/stable.txt"
+}
+
+locals {
+  kubernetes_version = coalesce(
+    var.kubernetes_version,
+    data.http.latest_stable_kubernetes_version.response_body
+  )
 }
 
 variable "kubernetes_nodes" {

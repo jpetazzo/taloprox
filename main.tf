@@ -1,9 +1,8 @@
 locals {
-  first_node_id      = [for k, v in local.kubernetes_nodes : k if v.machine_type == "controlplane"][0]
-  first_node         = local.kubernetes_nodes[local.first_node_id]
-  first_node_addr    = split("/", local.first_node.networking[0].ipv4_address)[0]
-  kubernetes_version = data.talos_machine_configuration._[local.first_node_id].kubernetes_version
-  proxmox_nodes      = toset([for k, v in local.kubernetes_nodes : v.hypervisor])
+  first_node_id   = [for k, v in local.kubernetes_nodes : k if v.machine_type == "controlplane"][0]
+  first_node      = local.kubernetes_nodes[local.first_node_id]
+  first_node_addr = split("/", local.first_node.networking[0].ipv4_address)[0]
+  proxmox_nodes   = toset([for k, v in local.kubernetes_nodes : v.hypervisor])
 }
 
 # Note: do not specify talos_version in there!
@@ -22,12 +21,13 @@ data "talos_client_configuration" "_" {
 }
 
 data "talos_machine_configuration" "_" {
-  for_each         = local.kubernetes_nodes
-  cluster_name     = local.talos_cluster_name
-  cluster_endpoint = local.kubernetes_api_endpoint
-  talos_version    = local.talos_version
-  machine_type     = each.value.machine_type
-  machine_secrets  = talos_machine_secrets._.machine_secrets
+  for_each           = local.kubernetes_nodes
+  cluster_name       = local.talos_cluster_name
+  cluster_endpoint   = local.kubernetes_api_endpoint
+  kubernetes_version = local.kubernetes_version
+  talos_version      = local.talos_version
+  machine_type       = each.value.machine_type
+  machine_secrets    = talos_machine_secrets._.machine_secrets
 }
 
 resource "proxmox_virtual_environment_vm" "_" {
